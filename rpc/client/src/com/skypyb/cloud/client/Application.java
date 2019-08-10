@@ -1,7 +1,7 @@
 package com.skypyb.cloud.client;
 
 import com.skypyb.cloud.client.core.Client;
-import com.skypyb.cloud.server.service.HelloService;
+import com.skypyb.cloud.client.service.HelloService;
 
 import java.net.InetSocketAddress;
 
