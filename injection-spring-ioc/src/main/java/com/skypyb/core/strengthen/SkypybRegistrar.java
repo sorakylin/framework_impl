@@ -1,58 +1,44 @@
 package com.skypyb.core.strengthen;
 
-import com.skypyb.core.factorybean.SkypybFactoryBean;
-import com.skypyb.dao.OneTestDao;
-import com.skypyb.dao.TwoTestDao;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import com.skypyb.core.ann.EnableSkypyb;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.GenericBeanDefinition;
+import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
+import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 
-public class SkypybRegistrar implements ImportBeanDefinitionRegistrar {
+
+public class SkypybRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware {
+
+    private ResourceLoader resourceLoader;
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry beanDefinitionRegistry) {
 
-        Class[] classes = scan();
+        //通过 AnnotationMetadata 得到要扫描哪些包下的类
+        AnnotationAttributes annAttrs = AnnotationAttributes.fromMap(annotationMetadata.getAnnotationAttributes(EnableSkypyb.class.getName()));
+        String[] enableSkypybValues = annAttrs.getStringArray("value");
 
-        for (Class clazz : classes) {
+        //用自己自定义的扫描器扫描
+        ClassPathSkypybScanner scanner = new ClassPathSkypybScanner(beanDefinitionRegistry);
 
-            //使用Spring提供的建造器建造出一个BeanDefinition
-            BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
-            GenericBeanDefinition beanDefinition = (GenericBeanDefinition) builder.getBeanDefinition();
-
-            //先保存下这个刚创建的BeanDefinition的类名
-            String beanClassName = beanDefinition.getBeanClassName();
-
-            //设置为我自定义的FactoryBean
-            beanDefinition.setBeanClass(SkypybFactoryBean.class);
-
-            //设置构造参数
-            beanDefinition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);
-
-            //注册
-            beanDefinitionRegistry.registerBeanDefinition(beanNameProcess(clazz.getSimpleName()), beanDefinition);
-        }
-
-
+        if (this.resourceLoader != null) scanner.setResourceLoader(this.resourceLoader);
+        scanner.registerFilters();
+        scanner.doScan(enableSkypybValues);
     }
 
 
-    /**
-     * 假装扫描
-     *
-     * @return 扫描出的需要代理的接口
-     */
-    private Class[] scan() {
-        return new Class[]{OneTestDao.class, TwoTestDao.class};
+    @Override
+    public void setResourceLoader(ResourceLoader resourceLoader) {
+        this.resourceLoader = resourceLoader;
     }
 
 
-    private String beanNameProcess(String simpleName) {
-        char c = simpleName.charAt(0);
-        return simpleName.replaceFirst("" + c, "" + (char) (c + 32));
-    }
+//    private String beanNameProcess(String simpleName) {
+//        char c = simpleName.charAt(0);
+//        return simpleName.replaceFirst("" + c, "" + (char) (c + 32));
+//    }
 
 
 }

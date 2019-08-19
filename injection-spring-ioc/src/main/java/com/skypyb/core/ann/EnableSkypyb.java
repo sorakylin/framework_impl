@@ -13,4 +13,5 @@ import java.lang.annotation.Target;
 @Import(SkypybRegistrar.class)
 public @interface EnableSkypyb {
 
+    String[] value() default {};
 }

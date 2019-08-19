@@ -6,7 +6,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 @ComponentScan("com.skypyb")
-@EnableSkypyb
+@EnableSkypyb("com.skypyb.dao")
 @Configuration
 public class MainConfig {
 
